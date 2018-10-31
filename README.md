@@ -33,3 +33,6 @@ I manually change the `lr` during training:
 - `0.001` for epoch `[250,350)`
 
 Resume the training with `python main.py --resume --lr=0.01`
+
+### For Isay
+`python main.py --model=resnet18 --cuda=0`
