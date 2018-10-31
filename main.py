@@ -9,6 +9,8 @@ import torch.backends.cudnn as cudnn
 
 import torchvision
 import torchvision.transforms as transforms
+from torch.optim.lr_scheduler import MultiStepLR 
+
 
 import os
 import argparse
@@ -20,9 +22,12 @@ from utils import progress_bar
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+parser.add_argument('--model', default='resnet18')
+parser.add_argument('--cuda', default='0', type=int)
+
 args = parser.parse_args()
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -32,51 +37,64 @@ transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
 transform_test = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+trainset = torchvision.datasets.CIFAR10(root='/share/cuvl/pytorch_data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+testset = torchvision.datasets.CIFAR10(root='/share/cuvl/pytorch_data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 # Model
 print('==> Building model..')
-# net = VGG('VGG19')
-net = ResNet18()
-# net = PreActResNet18()
-# net = GoogLeNet()
-# net = DenseNet121()
-# net = ResNeXt29_2x64d()
-# net = MobileNet()
-# net = MobileNetV2()
-# net = DPN92()
-# net = ShuffleNetG2()
-# net = SENet18()
+args.model = args.model.lower()
+net = None
+if args.model  == 'vgg19':
+    net = VGG('VGG19')
+elif args.model  == 'vgg16':
+    net = VGG('VGG16')
+elif args.model == 'resnet18':
+    net = ResNet18()
+elif args.model == 'preactresnet18':
+    net = PreActResNet18()
+elif args.model == 'googlenet':
+    net = GoogLeNet()
+elif args.model == 'densenet121':
+    net = DenseNet121()
+elif args.model == 'resnext29':
+    net = ResNeXt29_2x64d()
+elif args.model == 'mobilenet':
+    net = MobileNet()
+elif args.model == 'mobilenetv2':
+    net = MobileNetV2()
+elif args.model == 'dpn92':
+    net = DPN92()
+elif args.model == 'shufflenetg2':
+    net = ShuffleNetG2()
+elif args.model == 'senet18':
+    net = SENet18()
+
 net = net.to(device)
-if device == 'cuda':
-    net = torch.nn.DataParallel(net)
-    cudnn.benchmark = True
 
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.t7')
-    net.load_state_dict(checkpoint['net'])
-    best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
+    checkpoint = torch.load(f'./checkpoint/{args.model}.pth')
+    net.load_state_dict(checkpoint)
+
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+scheduler = MultiStepLR(optimizer, milestones=[150,250], gamma=0.1)
 
 # Training
 def train(epoch):
@@ -123,7 +141,8 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
-    if acc > best_acc:
+    saveEpochs = [0,1,2,3,4,5]
+    if acc > best_acc or epoch in saveEpochs:
         print('Saving..')
         state = {
             'net': net.state_dict(),
@@ -132,10 +151,15 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.t7')
+
+        if epoch in saveEpochs:
+            torch.save(state, f'./checkpoint/{args.model}_{epoch}.pth')
+        else:
+            torch.save(state, f'./checkpoint/{args.model}.pth')
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+200):
+for epoch in range(start_epoch, start_epoch+350):
+    scheduler.step()
     train(epoch)
     test(epoch)
