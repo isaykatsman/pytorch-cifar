@@ -24,6 +24,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--model', default='resnet18')
 parser.add_argument('--variation', default=0, type=int, help='variation on base model')
+parser.add_argument('--exp_name', default='exp_name')
 parser.add_argument('--cuda', default='0', type=int)
 parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--epochs', default=350, type=int)
@@ -91,7 +92,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load(f'./checkpoint/{args.model}.pth')
+    checkpoint = torch.load(f'./checkpoint/{args.model}_{args.exp_name}.pth')
     net.load_state_dict(checkpoint)
 
 
