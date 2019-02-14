@@ -157,9 +157,9 @@ def test(epoch):
             os.mkdir('checkpoint')
 
         if epoch in saveEpochs:
-            torch.save(state, f'./checkpoint/{args.model}_{epoch}.pth')
+            torch.save(state, f'./checkpoint/{args.model}_{args.exp_name}_{epoch}.pth')
         else:
-            torch.save(state, f'./checkpoint/{args.model}.pth')
+            torch.save(state, f'./checkpoint/{args.model}_{args.exp_name}.pth')
         best_acc = acc
 
 
