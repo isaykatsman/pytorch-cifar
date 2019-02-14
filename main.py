@@ -49,10 +49,10 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='/share/cuvl/pytorch_data', train=True, download=True, transform=transform_train)
+trainset = torchvision.datasets.CIFAR10(root='.', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR10(root='/share/cuvl/pytorch_data', train=False, download=True, transform=transform_test)
+testset = torchvision.datasets.CIFAR10(root='.', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
