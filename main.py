@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--model', default='resnet18')
+parser.add_argument('--variation', default=0, type=int, help='variation on base model')
 parser.add_argument('--cuda', default='0', type=int)
 parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--epochs', default=350, type=int)
@@ -64,7 +65,7 @@ if args.model  == 'vgg19':
 elif args.model  == 'vgg16':
     net = VGG('VGG16')
 elif args.model == 'resnet18':
-    net = ResNet18()
+    net = ResNet18(variation=args.variation)
 elif args.model == 'preactresnet18':
     net = PreActResNet18()
 elif args.model == 'googlenet':
