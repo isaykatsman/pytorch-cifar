@@ -35,4 +35,8 @@ I manually change the `lr` during training:
 Resume the training with `python main.py --resume --lr=0.01`
 
 ### For Isay
-`python main.py --model=resnet18 --cuda=0`
+`python main.py --model=resnet18 --cuda=0
+
+### Updated Running Command
+`python main.py --model=resnet18 --exp_name=var0 --variation=0 --cuda=0`
+
