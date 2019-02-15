@@ -84,7 +84,7 @@ elif args.model == 'dpn92':
 elif args.model == 'shufflenetg2':
     net = ShuffleNetG2()
 elif args.model == 'senet18':
-    net = SENet18()
+    net = SENet18(variation=args.variation)
 
 net = net.to(device)
 

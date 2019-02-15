@@ -77,9 +77,10 @@ class PreActBlock(nn.Module):
 
 
 class SENet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes=10, variation=0):
         super(SENet, self).__init__()
         self.in_planes = 64
+        self.variation = variation
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
@@ -87,7 +88,22 @@ class SENet(nn.Module):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512, num_classes)
+
+        if self.variation == 0:
+            self.linear = nn.Linear(512, num_classes)
+        elif self.variation == 1:
+            self.l5 = nn.Linear(512, 512)
+            self.l6 = nn.Linear(512, 512)
+            self.l7 = nn.Linear(512, 512)
+            self.linear = nn.Linear(512, num_classes)
+        elif self.variation == 2:
+            self.l5 = nn.Linear(512, 512)
+            self.l5relu = nn.ReLU()
+            self.l6 = nn.Linear(512, 512)
+            self.l6relu = nn.ReLU()
+            self.l7 = nn.Linear(512, 512)
+            self.l7relu = nn.ReLU()
+            self.linear = nn.Linear(512, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -105,12 +121,25 @@ class SENet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        out = self.linear(out)
+
+        if self.variation == 0:
+            out = self.linear(out)
+        elif self.variation == 1:
+            out = self.l5(out)
+            out = self.l6(out)
+            out = self.l7(out)
+            out = self.linear(out)
+        elif self.variation == 2:
+            out = self.l5relu(self.l5(out))
+            out = self.l6relu(self.l6(out))
+            out = self.l7relu(self.l7(out))
+            out = self.linear(out)
+
         return out
 
 
-def SENet18():
-    return SENet(PreActBlock, [2,2,2,2])
+def SENet18(variation=0):
+    return SENet(PreActBlock, [2,2,2,2], variation=variation)
 
 
 def test():
