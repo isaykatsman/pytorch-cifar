@@ -54,13 +54,14 @@ class Inception(nn.Module):
 
 
 class GoogLeNet(nn.Module):
-    def __init__(self):
+    def __init__(self, variation=0):
         super(GoogLeNet, self).__init__()
         self.pre_layers = nn.Sequential(
             nn.Conv2d(3, 192, kernel_size=3, padding=1),
             nn.BatchNorm2d(192),
             nn.ReLU(True),
         )
+        self.variation = variation
 
         self.a3 = Inception(192,  64,  96, 128, 16, 32, 32)
         self.b3 = Inception(256, 128, 128, 192, 32, 96, 64)
@@ -77,7 +78,22 @@ class GoogLeNet(nn.Module):
         self.b5 = Inception(832, 384, 192, 384, 48, 128, 128)
 
         self.avgpool = nn.AvgPool2d(8, stride=1)
-        self.linear = nn.Linear(1024, 10)
+
+        if self.variation == 0:
+            self.linear = nn.Linear(1024, 10)
+        elif self.variation == 1:
+            self.l5 = nn.Linear(1024, 1024)
+            self.l6 = nn.Linear(1024, 1024)
+            self.l7 = nn.Linear(1024, 1024)
+            self.linear = nn.Linear(1024, 10)
+        elif self.variation == 2:
+            self.l5 = nn.Linear(1024, 1024)
+            self.l5relu = nn.ReLU()
+            self.l6 = nn.Linear(1024, 1024)
+            self.l6relu = nn.ReLU()
+            self.l7 = nn.Linear(1024, 1024)
+            self.l7relu = nn.ReLU()
+            self.linear = nn.Linear(1024, 10)
 
     def forward(self, x):
         out = self.pre_layers(x)
@@ -94,7 +110,20 @@ class GoogLeNet(nn.Module):
         out = self.b5(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
-        out = self.linear(out)
+
+        if self.variation == 0:
+            out = self.linear(out)
+        elif self.variation == 1:
+            out = self.l5(out)
+            out = self.l6(out)
+            out = self.l7(out)
+            out = self.linear(out)
+        elif self.variation == 2:
+            out = self.l5relu(self.l5(out))
+            out = self.l6relu(self.l6(out))
+            out = self.l7relu(self.l7(out))
+            out = self.linear(out)
+
         return out
 
 

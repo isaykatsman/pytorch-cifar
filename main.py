@@ -70,9 +70,9 @@ elif args.model == 'resnet18':
 elif args.model == 'preactresnet18':
     net = PreActResNet18()
 elif args.model == 'googlenet':
-    net = GoogLeNet()
+    net = GoogLeNet(variation=args.variation)
 elif args.model == 'densenet121':
-    net = DenseNet121()
+    net = DenseNet121(variation=args.variation)
 elif args.model == 'resnext29':
     net = ResNeXt29_2x64d()
 elif args.model == 'mobilenet':
